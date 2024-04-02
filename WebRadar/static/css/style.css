@@ -1,0 +1,138 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at center, #465943, #000);
+}
+
+.radar {
+    width: calc(452px + 48px);
+    height: calc(452px + 48px);
+    border: 1px solid;
+    border-radius: 50%;
+    position: relative;
+    background: 
+        repeating-radial-gradient(
+            transparent 0,
+            transparent 30px,
+            #315e49 30px,
+            #315e49 32px),
+        linear-gradient(
+            transparent 49.75%,
+            #315e49 49.75%, 
+            #315e49 50.25%,
+            transparent 50.25%
+        ),
+        linear-gradient(
+            90deg,
+            transparent 49.75%,
+            #315e49 49.75%,
+            #315e49 50.25%,
+            transparent 50.25%
+        ),
+        linear-gradient(#000, #000);
+        left: 25%;
+}
+.radar::before {
+    content: "";
+    position: absolute;
+    width: calc(452px / 2);
+    height: calc(452px / 2);
+    background: linear-gradient(
+        45deg, 
+        rgba(0,0,0,0) 50%,
+        #00ff00 100%
+    );
+    border-radius: 100% 0 0 0;
+    top: calc(48px / 2);
+    left: calc(48px / 2);
+    animation: scanning 2s linear infinite;
+    transform-origin: 100% 100%;
+}
+.radar .angle-marker {
+    position: absolute; 
+    color: #28d505;
+    font-size: 12px;
+}
+.radar .angle-marker.zero {
+    top: 50%;
+    left: calc(100% + 20px);
+    transform: translate(-50%, -50%);
+}
+
+.radar .angle-marker.ninety {
+    top: calc(100% + 20px);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.radar .angle-marker.one-eighty {
+    top: 50%; 
+    right: calc(100% + 20px);
+    transform: translate(50%, -50%);
+}
+
+.radar .angle-marker.two-seventy {
+    top: calc(0% - 30px);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+@keyframes scanning {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.current-time {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color: rgba(32, 162, 60, 0);
+    padding: 10px;
+    border-radius: 5px;
+    color: #358c35;
+}
+.radar-dimensions {
+    position: absolute;
+    top: 60px;
+    left: 20px;
+    background-color: rgba(32, 162, 60, 0);
+    padding: 10px;
+    border-radius: 5px;
+    color: #358c35;
+}
+.radar-center {
+    position: absolute;
+    top: 100px;
+    left: 20px;
+    background-color: rgba(32, 162, 60, 0);
+    padding: 10px;
+    border-radius: 5px;
+    color: #358c35;
+}
+.target-distance {
+    position: absolute;
+    top: 140px;
+    left: 20px;
+    background-color: rgba(32, 162, 60, 0);
+    padding: 10px;
+    border-radius: 5px;
+    color: #358c35;
+}
+.target-angle {
+    position: absolute;
+    top: 180px;
+    left: 20px;
+    background-color: rgba(32, 162, 60, 0);
+    padding: 10px;
+    border-radius: 5px;
+    color: #358c35;
+}
