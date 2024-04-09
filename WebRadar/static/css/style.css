@@ -2,6 +2,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: "宋体";
 }
 
 body {
@@ -56,59 +57,56 @@ body {
     animation: scanning 2s linear infinite;
     transform-origin: 100% 100%;
 }
-.radar .angle-marker {
-    position: absolute; 
-    color: #28d505;
-    font-size: 12px;
-}
-.radar .angle-marker.zero {
-    top: 50%;
-    left: calc(100% + 20px);
-    transform: translate(-50%, -50%);
-}
-
-.radar .angle-marker.ninety {
-    top: calc(100% + 20px);
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.radar .angle-marker.one-eighty {
-    top: 50%; 
-    right: calc(100% + 20px);
-    transform: translate(50%, -50%);
-}
-
-.radar .angle-marker.two-seventy {
-    top: calc(0% - 30px);
-    left: 50%;
-    transform: translateX(-50%);
-}
-
 @keyframes scanning {
     to {
         transform: rotate(360deg);
     }
 }
 
-.container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    text-align: left;
+.direction {
+    position: absolute;
+    color: #24cb1e;
+    font-size: 13px;
+    font-weight: bold;
 }
 
-.time {
-    position: fixed;
+.direction-top {
+    top: -20px;
+    left: 51%;
+    transform: translateX(-50%);
+}
+
+.direction-bottom {
+    bottom: -20px;
+    left: 51%;
+    transform: translateX(-50%);
+}
+
+.direction-left {
+    top: 50%;
+    left: -20px;
+    transform: translateY(-50%);
+}
+
+.direction-right {
+    top: 50%;
+    right: -35px;
+    transform: translateY(-50%);
+}
+
+
+
+.current-time {
+    position: absolute;
     top: 20px;
     left: 20px;
     background-color: rgba(32, 162, 60, 0);
     padding: 10px;
-    border-radius: 5px;
     color: #358c35;
+    font-size: 16px;
 }
-.radar-angle {
-    position: fixed;
+.scan-range {
+    position: absolute;
     top: 60px;
     left: 20px;
     background-color: rgba(32, 162, 60, 0);
@@ -116,17 +114,8 @@ body {
     border-radius: 5px;
     color: #358c35;
 }
-.radar-dimensions {
-    position: fixed;
-    top: 60px;
-    left: 20px;
-    background-color: rgba(32, 162, 60, 0);
-    padding: 10px;
-    border-radius: 5px;
-    color: #358c35;
-}
-.radar-center {
-    position: fixed;
+.scan-center {
+    position: absolute;
     top: 100px;
     left: 20px;
     background-color: rgba(32, 162, 60, 0);
@@ -134,12 +123,31 @@ body {
     border-radius: 5px;
     color: #358c35;
 }
-.distance-display {
-    position: fixed;
+.target-distance {
+    position: absolute;
     top: 140px;
     left: 20px;
     background-color: rgba(32, 162, 60, 0);
     padding: 10px;
     border-radius: 5px;
     color: #358c35;
+}
+.target-angle {
+    position: absolute;
+    top: 180px;
+    left: 20px;
+    background-color: rgba(32, 162, 60, 0);
+    padding: 10px;
+    border-radius: 5px;
+    color: #358c35;
+}
+
+
+.target {
+    display: none;
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    background-color: red;
+    border-radius: 50%;
 }
