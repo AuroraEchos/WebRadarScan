@@ -2,12 +2,12 @@
 <html>
 
     <head>
-        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <meta http-equiv="contemt-type" content="text/html" charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
         <title>Radar Scan</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='/css/style.css') }}">
+        <link rel="stylesheet" href="/static/css/style.css">
     </head>
-    
     <body>
         <div class="radar">
             <div class="angle-marker zero">0°</div>
@@ -15,19 +15,13 @@
             <div class="angle-marker one-eighty">180°</div>
             <div class="angle-marker two-seventy">270°</div>
         </div>
-        <div class="current-time" id="currentTime"></div>
-        <div class="radar-dimensions" id="radarDimensions"></div>
-        <div class="radar-center" id="radarCenter"></div>
-        <div class="target-distance" id="targetDistance"></div>
-        <div class="target-angle" id="targetAngle"></div>
-        <div style="position: fixed; bottom: 30px; left: 20px; height: 50%; width: 50%;">
-            <canvas id="lineChart"></canvas>
+        <div class="container">
+            <div class="time" id="Time"></div>
+            <div class="radar-dimensions" id="radarDimensions"></div>
+            <div class="radar-angle" id="radarAngle"></div>
+            <div class="radar-center" id="radarCenter"></div>
         </div>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"
-            integrity="sha512-11t8Q+vY9JlCrr+PveZKTYJq8n7O09Y5X/pk/aMd3vJugSvu4xOunGEUzaADqL3I8cZKE/pBwwCfXzDkRJh2sQ=="
-            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script src="/static/js/script.js"></script>
     </body>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.min.js"></script>
+    <script src="/static/js/script.js"></script>
 </html>

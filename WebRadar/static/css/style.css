@@ -91,8 +91,15 @@ body {
     }
 }
 
-.current-time {
-    position: absolute;
+.container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    text-align: left;
+}
+
+.time {
+    position: fixed;
     top: 20px;
     left: 20px;
     background-color: rgba(32, 162, 60, 0);
@@ -100,8 +107,17 @@ body {
     border-radius: 5px;
     color: #358c35;
 }
+.radar-angle {
+    position: fixed;
+    top: 60px;
+    left: 20px;
+    background-color: rgba(32, 162, 60, 0);
+    padding: 10px;
+    border-radius: 5px;
+    color: #358c35;
+}
 .radar-dimensions {
-    position: absolute;
+    position: fixed;
     top: 60px;
     left: 20px;
     background-color: rgba(32, 162, 60, 0);
@@ -110,7 +126,7 @@ body {
     color: #358c35;
 }
 .radar-center {
-    position: absolute;
+    position: fixed;
     top: 100px;
     left: 20px;
     background-color: rgba(32, 162, 60, 0);
@@ -118,18 +134,9 @@ body {
     border-radius: 5px;
     color: #358c35;
 }
-.target-distance {
-    position: absolute;
+.distance-display {
+    position: fixed;
     top: 140px;
-    left: 20px;
-    background-color: rgba(32, 162, 60, 0);
-    padding: 10px;
-    border-radius: 5px;
-    color: #358c35;
-}
-.target-angle {
-    position: absolute;
-    top: 180px;
     left: 20px;
     background-color: rgba(32, 162, 60, 0);
     padding: 10px;
