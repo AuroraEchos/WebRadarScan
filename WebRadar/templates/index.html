@@ -14,19 +14,28 @@
             <div class="direction direction-left">0°</div>
             <div class="direction direction-top">90°</div>
             <div class="direction direction-right">180°</div>
-            <div class="direction direction-bottom">270°</div>
         </div>
         <div class="current-time" id="currentTime"></div>
         <div class="scan-range" id="scanRange"></div>
-        <div class="scan-center" id="ScanCenter"></div>
         <div class="target" id="target"></div>
-        <div class="target-distance" id="TargetDistance"></div>
-        <div class="target-angle" id="TargetAngle"></div>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"></script>
+        <table>
+            <tr>
+                <th>目标距离</th>
+                <th>目标角度</th>
+            </tr>
+            <tbody id="distanceAndAngleTableBody"></tbody>
+        </table>
+        <div style="position: fixed; bottom: 2px; height: 35%; width: 100%; z-index: 9999;">
+            <canvas id="lineChart" width=0></canvas>
+        </div>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"
+            integrity="sha512-11t8Q+vY9JlCrr+PveZKTYJq8n7O09Y5X/pk/aMd3vJugSvu4xOunGEUzaADqL3I8cZKE/pBwwCfXzDkRJh2sQ=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
             setInterval(function() {
                 displayTime();
-                displayScanCenter();
                 displayScanRange();
             }, 1000);
             function displayTime() {
@@ -38,55 +47,104 @@
                 var ScanRange = document.getElementById('scanRange');
                 ScanRange.innerHTML = "扫描半径: " + "4000" + " mm";
             }
-            function displayScanCenter() {
-                var radar = document.querySelector('.radar');
-                var radarRect = radar.getBoundingClientRect()
-                var radarCenterX = (radarRect.left + radarRect.width / 2).toFixed(1);
-                var radarCenterY = (radarRect.top + radarRect.height / 2).toFixed(1);
-                var ScanCenter = document.getElementById('ScanCenter');
-                ScanCenter.innerHTML = "扫描中心: " + radarCenterX + " x " + radarCenterY;
-            }
             function displayTarget(distance, angle) {
-                // 获取雷达显示区域的位置和尺寸信息
+
                 var radar = document.querySelector('.radar');
                 var radarRect = radar.getBoundingClientRect();
                 
-                // 计算雷达显示区域的中心坐标点
                 var radarCenterX = (radarRect.left + radarRect.width / 2).toFixed(1);
                 var radarCenterY = (radarRect.top + radarRect.height / 2).toFixed(1);
 
-                // 将距离转换为相对于雷达界面的半径
                 var radius = distance / 4000 * (radarRect.width / 2);
 
-                // 使用三角函数计算目标点的坐标
                 var targetX = Number(radarCenterX) - Number(radius * Math.cos(angle * Math.PI / 180));
                 var targetY = Number(radarCenterY) - Number(radius * Math.sin(angle * Math.PI / 180));
-
-                // 打印雷达中心坐标
-                console.log("雷达中心坐标(X, Y):", radarCenterX, radarCenterY);
-                // 打印没有相加的目标点偏移量
-                console.log("目标点偏移量(X, Y):", radius * Math.cos(angle * Math.PI / 180), radius * Math.sin(angle * Math.PI / 180));
-                // 打印目标点坐标
-                console.log("目标点坐标(X, Y):", targetX, targetY);
             
                 var target = document.getElementById('target');
-                var TargetDistance = document.getElementById('TargetDistance');
-                var TargetAngle = document.getElementById('TargetAngle');
-
-                TargetDistance.innerHTML = "目标距离: " + distance + " mm";
-                TargetAngle.innerHTML = "目标角度: " + angle + "°";
-
-                target.style.display = 'block';
 
                 target.style.left = (targetX - 4) + 'px';
                 target.style.top = (targetY - 5) + 'px';
+
+                target.style.display = 'block';
                 
             }
-            var socket = io();
-            socket.on('update_data', function (data) {
-                displayTarget(data.distance, data.angle);
+            function displayDistanceAndAngle(distance, angle) {
+                var tableBody = document.getElementById('distanceAndAngleTableBody');
+                
+                if (tableBody.rows.length >= 20) {
+                    tableBody.deleteRow(0);
+                }
+                
+                var newRow = tableBody.insertRow();
+                var distanceCell = newRow.insertCell(0);
+                var angleCell = newRow.insertCell(1);
+                distanceCell.innerHTML = distance;
+                angleCell.innerHTML = angle;
+            }
+
+            const socket = io();
+            const ctx = document.getElementById('lineChart').getContext('2d');
+            const lineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Distance',
+                        data: [],
+                        borderColor: 'green',
+                        borderWidth: 1,
+                        fill: false
+                    },
+                    {
+                        label: 'Angle',
+                        data: [],
+                        borderColor: 'blue',
+                        borderWidth: 1,
+                        fill: false
+                    }]
+                },
+                
+                options: {
+                    scales: {
+                        x : {
+                            type: 'linear',
+                            position: 'bottom',
+                            min: 0,
+                            max: 100,
+                        },
+                        y: {
+                            min: 0,
+                            max: 500,
+                        }
+                    }
+                }
             });
             
+            socket.on('update_data', function (data) {
+                displayTarget(data.distance, data.angle);
+                displayDistanceAndAngle(data.distance, data.angle);
+
+                const distance = data.distance / 4000 * 500;
+                const angle = data.angle;
+
+                lineChart.data.datasets[0].data.push(distance);
+                lineChart.data.datasets[1].data.push(angle);
+
+                if (lineChart.data.labels.length < 100) {
+                    lineChart.data.labels.push(lineChart.data.labels.length);
+                } else {
+                    for (let i = 0; i < lineChart.data.labels.length; i++) {
+                        lineChart.data.labels[i] = i + 1;
+                    }
+                }
+                if (lineChart.data.datasets[0].data.length >= 100) {
+                    lineChart.data.datasets[0].data.shift();
+                    lineChart.data.datasets[1].data.shift();
+                }
+
+                lineChart.update();
+            });
+        
         </script>
     </body>
 

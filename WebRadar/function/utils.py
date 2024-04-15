@@ -1,15 +1,17 @@
 import asyncio
-import binascii
 from pyserial_asyncio import serial_asyncio
 
 class SerialPort:
-    def __init__(self, port, baudrate, bytesize=8, parity='N', stopbits=1, timeout=1):
+    def __init__(self, port, baudrate, bytesize=8, parity='N', stopbits=1, timeout=1, xonxoff=False, rtscts=True, dsrdtr=True):
         self.port = port
         self.baudrate = baudrate
         self.bytesize = bytesize
         self.parity = parity
         self.stopbits = stopbits
         self.timeout = timeout
+        self.xonxoff = xonxoff
+        self.rtscts = rtscts
+        self.dsrdtr = dsrdtr
         self.serial = None
 
     async def open(self):
@@ -38,12 +40,10 @@ async def receive_data(serial_port):
     while True:
         data = await serial_port.read()
         if data:
-            print("接收到的原始内容：",data)
-            #hex_data = binascii.hexlify(data).decode()
-            #print("解码后的内容：",hex_data)
+            print("Received data: ", data)
 
 async def main():
-    my_serial_port = SerialPort('COM1', 9600)
+    my_serial_port = SerialPort('COM3', 9600)
     await my_serial_port.open()
 
     receive_task = asyncio.create_task(receive_data(my_serial_port))

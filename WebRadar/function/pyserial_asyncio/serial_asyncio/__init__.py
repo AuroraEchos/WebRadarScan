@@ -560,7 +560,7 @@ if __name__ == '__main__':
             print('resume writing')
 
     loop = asyncio.get_event_loop()
-    coro = create_serial_connection(loop, Output, '/dev/ttyUSB0', baudrate=115200)
+    coro = create_serial_connection(loop, Output, 'COM3', baudrate=9600)
     transport, protocol = loop.run_until_complete(coro)
     loop.run_forever()
     loop.close()
