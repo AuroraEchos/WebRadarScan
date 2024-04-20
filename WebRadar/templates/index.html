@@ -5,11 +5,16 @@
         <meta http-equiv="content-type" content="text/html; charset=utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
         <title>Radar Scan</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='/css/style.css') }}">
         <link rel="stylesheet" href="/static/css/style.css">
+        <link rel="shortcut icon" href="#"/>
     </head>
 
     <body>
+        <h1> 雷 达 扫 描</h1>
+        <div class="slider-container">
+            <label for="speedControl">扫描速度：</label>
+            <input type="range" class="slider" id="speedControl" min="1" max="10" value="3">
+        </div>
         <div class="radar">
             <div class="direction direction-left">0°</div>
             <div class="direction direction-top">90°</div>
@@ -29,9 +34,6 @@
             <canvas id="lineChart" width=0></canvas>
         </div>
         
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"
-            integrity="sha512-11t8Q+vY9JlCrr+PveZKTYJq8n7O09Y5X/pk/aMd3vJugSvu4xOunGEUzaADqL3I8cZKE/pBwwCfXzDkRJh2sQ=="
-            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
             setInterval(function() {
@@ -47,6 +49,7 @@
                 var ScanRange = document.getElementById('scanRange');
                 ScanRange.innerHTML = "扫描半径: " + "4000" + " mm";
             }
+            
             function displayTarget(distance, angle) {
 
                 var radar = document.querySelector('.radar');
@@ -82,7 +85,20 @@
                 angleCell.innerHTML = angle;
             }
 
-            const socket = io();
+            document.getElementById('speedControl').addEventListener('input', function() {
+                var speed = this.value;
+                var animationDuration = 10 / speed;
+
+                var radarElement = document.querySelector('.radar::before');
+                if (radarElement) {
+                    radarElement.style.animationDuration = animationDuration + 's';
+                } else {
+                    var style = document.createElement('style');
+                    style.innerHTML = `.radar::before { animation-duration: ${animationDuration}s !important; }`;
+                    document.head.appendChild(style);
+                }
+            });
+
             const ctx = document.getElementById('lineChart').getContext('2d');
             const lineChart = new Chart(ctx, {
                 type: 'line',
@@ -110,7 +126,7 @@
                             type: 'linear',
                             position: 'bottom',
                             min: 0,
-                            max: 100,
+                            max: 50,
                         },
                         y: {
                             min: 0,
@@ -119,8 +135,14 @@
                     }
                 }
             });
+
+            const ws = new WebSocket("ws://localhost:8000/ws");
+            ws.onopen = function(event) {
+                console.log("Connected to WebSocket.");
+            };
             
-            socket.on('update_data', function (data) {
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
                 displayTarget(data.distance, data.angle);
                 displayDistanceAndAngle(data.distance, data.angle);
 
@@ -130,21 +152,34 @@
                 lineChart.data.datasets[0].data.push(distance);
                 lineChart.data.datasets[1].data.push(angle);
 
-                if (lineChart.data.labels.length < 100) {
+                if (lineChart.data.labels.length < 50) {
                     lineChart.data.labels.push(lineChart.data.labels.length);
                 } else {
                     for (let i = 0; i < lineChart.data.labels.length; i++) {
                         lineChart.data.labels[i] = i + 1;
                     }
                 }
-                if (lineChart.data.datasets[0].data.length >= 100) {
+                if (lineChart.data.datasets[0].data.length >= 50) {
                     lineChart.data.datasets[0].data.shift();
                     lineChart.data.datasets[1].data.shift();
                 }
 
                 lineChart.update();
-            });
-        
+            };
+
+            ws.onerror = function(error) {
+                console.error("WebSocket error: ", error);
+            };
+
+            ws.onclose = function(event) {
+                if (event.wasClean) {
+                    console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+                } else {
+                    console.log('[close] Connection died');
+                }
+            };
+            
+            
         </script>
     </body>
 
