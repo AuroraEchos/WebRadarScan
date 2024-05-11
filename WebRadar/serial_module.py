@@ -3,6 +3,8 @@ import pymysql
 import json
 import time
 import serial_asyncio
+import serial
+import re
 
 #------------------- MySQL -------------------
 class DatabaseManager:
@@ -55,7 +57,8 @@ class DatabaseManager:
         except pymysql.Error as e:
             print(f"Error inserting data: {e}")
 
-#------------------- Utils -------------------
+#------------------- Helper -------------------
+last_data = None
 class DataHelper:
     def __init__(self):
         pass
@@ -74,6 +77,46 @@ class DataHelper:
         current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         
         return current_time
+    
+    @staticmethod
+    def detect_serial_ports():
+        ports = serial.tools.list_ports.comports()
+        if not ports:
+            return []
+        
+        port_list = []
+        for port in ports:
+            port_info = {
+                "name": port.name,
+                "description": port.description,
+                "device": port.device
+            }
+            port_list.append(port_info)
+        return port_list
+    
+    @staticmethod
+    def process_data(data):
+        global last_data
+        
+        lines = data.split(b'\n')
+        for line in lines:
+            line = line.strip().decode('utf-8')
+            if line:
+                if line == 'ERROR':
+                    result = {"angle": 0, "distance": 0}
+                else:
+                    match = re.match(r'Angle:(\d+)Distance:(\d+)', line)
+                    if match:
+                        angle = int(match.group(1))
+                        distance = int(match.group(2))
+                        if angle != last_data:
+                            result = {"angle": angle, "distance": distance}
+                            last_data = angle
+                        else:
+                            result = None
+                    else:
+                        result = None
+                return result
 
 #------------------- Serial -------------------
 
@@ -129,7 +172,7 @@ async def receive_data(serial_port):
                 print("Key error in JSON data:", e)
             
 async def main():
-    my_serial_port = SerialPort('COM3', 115200)
+    my_serial_port = SerialPort('COM3', 9600)
     await my_serial_port.open()
 
     receive_task = asyncio.create_task(receive_data(my_serial_port))

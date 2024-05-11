@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Radar Scan</title>
+</head>
+<style>
+    .radar {
+        width: calc(612px + 48px);
+        height: calc(612px + 48px);
+        border: 1px solid;
+        border-radius: 50%;
+        position: relative;
+        top: 80px;
+        background: repeating-radial-gradient(
+                transparent 0,
+                transparent 30px,
+                #2f916300 30px,
+                #315e49 32px),
+            linear-gradient(
+                transparent 49.75%,
+                #315e49 49.75%,
+                #315e49 50.25%,
+                transparent 50.25%
+            ),
+            linear-gradient(
+                90deg,
+                transparent 49.75%,
+                #1a5f3f00 49.75%,
+                #315e49 50.25%,
+                transparent 50.25%
+            ),
+            linear-gradient(#000, #228f46);
+    }
+
+    .radar::before {
+        content: "";
+        position: absolute;
+        width: calc(652px / 2);
+        height: calc(654px / 2);
+
+        border: 1px solid #315e49;
+        background: linear-gradient(
+            225deg,
+            #03f703 10%,
+            rgba(7, 7, 7, 0) 100%
+        );
+
+        border-radius: 100% 0 0 0;
+        animation: rotate-scan-line 3s linear infinite alternate;
+        transform-origin: 100% 100%;
+        clip-path: polygon(0% 50%, 0% 100%, 100% 100%);
+
+    }
+
+    @keyframes rotate-scan-line {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(154deg);
+        }
+    }
+
+    .target {
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        animation: pulse 0.5s infinite alternate;
+    }
+    .target::before {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: red;
+        border-radius: 50%;
+        animation: blink 1.2s infinite alternate;
+    }
+    @keyframes pulse {
+        from {
+            transform: scale(1);
+        }
+
+        to {
+            transform: scale(1.5);
+        }
+    }
+
+    @keyframes blink {
+        from {
+            opacity: 0.5;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+</style>
+
+<body>
+    <div class="radar">
+    </div>
+    <script>
+        function displayTarget(distance, angle) {
+
+            var radar = document.querySelector('.radar');
+            var radarRect = radar.getBoundingClientRect();
+
+            var radarCenterX = (radarRect.left + radarRect.width / 2).toFixed(1);
+            var radarCenterY = (radarRect.top + radarRect.height / 2).toFixed(1);
+
+            var radius = distance / 4000 * (radarRect.width / 2);
+
+            var targetX = Number(radarCenterX) - Number(radius * Math.cos(angle * Math.PI / 180));
+            var targetY = Number(radarCenterY) - Number(radius * Math.sin(angle * Math.PI / 180));
+
+            var target = document.createElement('div');
+            target.className = 'target';
+            target.style.left = (targetX - 5) + 'px';
+            target.style.top = (targetY - 4) + 'px';
+
+            radar.appendChild(target);
+        }
+
+        function clearTargets() {
+            var radar = document.querySelector('.radar');
+            var targets = radar.querySelectorAll('.target');
+            targets.forEach(function(target) {
+                radar.removeChild(target);
+            });
+        }
+
+        var targetsArray = [];
+
+        // 写一个函数，生成1个目标点
+        function generateRandomTarget() {
+            var distance = Math.floor(Math.random() * 4000);
+            var angle = Math.floor(Math.random() * 90);
+            return {
+                distance: distance,
+                angle: angle
+            };
+        }
+
+        //设置数组最大上限为10个，然后没生成一个目标点，就往数组里面push一个目标点，如果数组长度超过10个，就去除最旧的那个，插入新的
+        function generateRandomTargets() {
+            var newTarget = generateRandomTarget();
+            targetsArray.push(newTarget);
+            if (targetsArray.length > 10) {
+                targetsArray.shift();
+            }
+        }
+
+        // 不断的遍历数组，然后显示所有的目标点
+        function displayRandomTargets() {
+            clearTargets();
+            targetsArray.forEach(function(target) {
+                displayTarget(target.distance, target.angle);
+            });
+        }
+
+        // 每隔1秒生成一个目标点
+        setInterval(function() {
+            generateRandomTargets();
+            displayRandomTargets();
+        }, 2000);
+
+
+
+
+        
+    </script>
+</body>
+
+</html>

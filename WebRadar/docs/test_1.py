@@ -11,7 +11,8 @@ class DataHelper:
         return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     
     @staticmethod
-    def process_data(data, last_data):
+    def process_data(data):
+        
         lines = data.split(b'\n')
         for line in lines:
             line = line.strip().decode('utf-8')
@@ -23,11 +24,7 @@ class DataHelper:
                     if match:
                         angle = int(match.group(1))
                         distance = int(match.group(2))
-                        if angle != last_data['angle']:
-                            result = {"angle": angle, "distance": distance}
-                            last_data['angle'] = angle
-                        else:
-                            result = None
+                        result = {"angle": angle, "distance": distance}
                     else:
                         result = None
                 return result
@@ -46,7 +43,6 @@ class SerialPort:
         self.rtscts = rtscts
         self.dsrdtr = dsrdtr
         self.serial = None
-        self.last_data = {'angle': None, 'distance': None}
 
     async def open(self):
         self.serial = await serial_asyncio.open_serial_connection(
@@ -73,9 +69,8 @@ async def receive_data(serial_port):
     while True:
         data = await serial_port.read()
         if data:
-            result = DataHelper.process_data(data, serial_port.last_data)
-            if result:
-                print("原始数据：", data, "处理后数据：", result)
+            result = DataHelper.process_data(data)
+            print("原始数据：", data, "处理后数据：", result)
 
 async def main():
     my_serial_port = SerialPort('COM3', 115200)

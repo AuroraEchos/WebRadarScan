@@ -4,10 +4,11 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.websockets import WebSocket, WebSocketDisconnect
 import asyncio
-import json
 from typing import List
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-from serial_module import SerialPort
+from serial_module import SerialPort, DataHelper
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -28,13 +29,11 @@ async def shutdown_event():
 async def read_from_serial():
     while True:
         data = await serial_port.read()
-        try:
-            data_dict = json.loads(data.decode('utf-8'))
-            if 'angle' in data_dict and 'distance' in data_dict:
-                await manager.broadcast(data_dict)
-        except json.JSONDecodeError:
-            print("JSON decode error.")  
-        await asyncio.sleep(0.1)
+        result = DataHelper.process_data(data)
+        if result is not None:
+            print(result)
+            await manager.broadcast(result)
+        await asyncio.sleep(0.01)
 
 class ConnectionManager:
     def __init__(self):
@@ -59,8 +58,6 @@ class ConnectionManager:
             self.disconnect(connection)
 
 manager = ConnectionManager()
-
-
 
 @app.get("/", response_class=HTMLResponse)
 async def read_index(request: Request):

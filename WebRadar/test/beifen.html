@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <title>Radar Scan</title>
+        <link rel="stylesheet" href="/static/css/style.css?v=HASH_VALUE">
+        <link rel="shortcut icon" href="#"/>
+    </head>
+
+    <body>
+        <h1> 雷 达 扫 描</h1>
+        <div class="radar">
+            <div class="direction direction-left">0°</div>
+            <div class="direction direction-top">90°</div>
+            <div class="direction direction-right">180°</div>
+        </div>
+        <div class="current-time" id="currentTime"></div>
+        <div class="scan-range" id="scanRange"></div>
+        <div class="target" id="target"></div>
+        <table>
+            <tr>
+                <th>目标距离</th>
+                <th>目标角度</th>
+            </tr>
+            <tbody id="distanceAndAngleTableBody"></tbody>
+        </table>
+        <div style="position: fixed; bottom: 2px; height: 35%; width: 100%; z-index: 9999;">
+            <canvas id="lineChart" width=0></canvas>
+        </div>
+
+        <canvas class="scanLineCanvas" id="scanLineCanvas"></canvas>
+        
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            setInterval(function() {
+                displayTime();
+                displayScanRange();
+            }, 1000);
+            function displayTime() {
+                var date = new Date();
+                var dateText = document.getElementById('currentTime');
+                dateText.innerHTML =  "当前时间: " + date.toLocaleDateString() + " " + date.toLocaleTimeString();
+            }
+            function displayScanRange() {
+                var ScanRange = document.getElementById('scanRange');
+                ScanRange.innerHTML = "扫描半径: " + "4000" + " mm";
+            }
+            function displayDistanceAndAngle(distance, angle) {
+                var tableBody = document.getElementById('distanceAndAngleTableBody');
+                
+                if (tableBody.rows.length >= 20) {
+                    tableBody.deleteRow(0);
+                }
+                
+                var newRow = tableBody.insertRow();
+                var distanceCell = newRow.insertCell(0);
+                var angleCell = newRow.insertCell(1);
+                
+                if (distance === 0 && angle === 0) {
+                    distanceCell.innerHTML = '<span style="color: red;">' + distance + '</span>';
+                    angleCell.innerHTML = '<span style="color: red;">' + angle + '</span>';
+                } else {
+                    distanceCell.innerHTML = distance;
+                    angleCell.innerHTML = angle;
+                }
+            }
+            
+            const ctx = document.getElementById('lineChart').getContext('2d');
+            const lineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Distance',
+                        data: [],
+                        borderColor: 'green',
+                        borderWidth: 1,
+                        fill: false
+                    },
+                    {
+                        label: 'Angle',
+                        data: [],
+                        borderColor: 'blue',
+                        borderWidth: 1,
+                        fill: false
+                    }]
+                },
+                
+                options: {
+                    scales: {
+                        x : {
+                            type: 'linear',
+                            position: 'bottom',
+                            min: 0,
+                            max: 50,
+                        },
+                        y: {
+                            min: 0,
+                            max: 500,
+                        }
+                    }
+                }
+            });
+
+            const scanLineCanvas = document.getElementById('scanLineCanvas');
+            const scanLineCtx = scanLineCanvas.getContext('2d');
+            const radar = document.querySelector('.radar');
+            const radarRect = radar.getBoundingClientRect();
+            const pageWidth = document.documentElement.clientWidth;
+            const pageHeight = document.documentElement.clientHeight;
+
+            scanLineCanvas.width = pageWidth/2 + radarRect.width/2;
+            scanLineCanvas.height = pageHeight/2 + radarRect.height/8;
+
+            const radarCenterX = radarRect.left + radarRect.width / 2;
+            const radarCenterY = radarRect.top + radarRect.height / 2;
+
+            const lineLength = 330;
+
+            function drawScanLine(angle) {
+                scanLineCtx.clearRect(0, 0, scanLineCanvas.width, scanLineCanvas.height);
+                const endX = radarCenterX - lineLength * Math.cos(angle * Math.PI / 180);
+                const endY = radarCenterY - lineLength * Math.sin(angle * Math.PI / 180);
+                
+                const gradient = scanLineCtx.createLinearGradient(radarCenterX, radarCenterY, endX, endY);
+                gradient.addColorStop(0, 'rgba(0, 255, 0, 1)');
+                gradient.addColorStop(0.5, 'rgba(0, 255, 0, 0.5)');
+                gradient.addColorStop(1, 'rgba(0, 255, 0, 0)');
+
+                scanLineCtx.beginPath();
+                scanLineCtx.moveTo(radarCenterX + 1, radarCenterY - 3);
+                scanLineCtx.lineTo(endX, endY);
+                scanLineCtx.strokeStyle = gradient;
+                scanLineCtx.lineWidth = 3;
+                scanLineCtx.stroke();
+            }
+            function displayTarget(distance, angle) {
+
+                var radar = document.querySelector('.radar');
+                var radarRect = radar.getBoundingClientRect();
+
+                var radarCenterX = (radarRect.left + radarRect.width / 2).toFixed(1);
+                var radarCenterY = (radarRect.top + radarRect.height / 2).toFixed(1);
+
+                var radius = distance / 4000 * (radarRect.width / 2);
+
+                var targetX = Number(radarCenterX) - Number(radius * Math.cos(angle * Math.PI / 180));
+                var targetY = Number(radarCenterY) - Number(radius * Math.sin(angle * Math.PI / 180));
+
+                var target = document.getElementById('target');
+
+                target.style.left = (targetX - 4) + 'px';
+                target.style.top = (targetY - 5) + 'px';
+
+                target.style.display = 'block';
+
+            }
+
+            const ws = new WebSocket("ws://localhost:8000/ws");
+            ws.onopen = function(event) {
+                console.log("Connected to WebSocket.");
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                displayDistanceAndAngle(data.distance, data.angle);
+
+                const distance = data.distance / 4000 * 500;
+                const angle = data.angle;
+
+                let pointsArray = [];
+
+                if (data.distance !== 0) {
+                    drawScanLine(data.angle);
+                    displayTarget(data.distance, data.angle);
+                }
+
+                lineChart.data.datasets[0].data.push(distance);
+                lineChart.data.datasets[1].data.push(angle);
+                if (lineChart.data.labels.length < 50) {
+                    lineChart.data.labels.push(lineChart.data.labels.length);
+                } else {
+                    for (let i = 0; i < lineChart.data.labels.length; i++) {
+                        lineChart.data.labels[i] = i + 1;
+                    }
+                }
+                if (lineChart.data.datasets[0].data.length >= 50) {
+                    lineChart.data.datasets[0].data.shift();
+                    lineChart.data.datasets[1].data.shift();
+                }
+                lineChart.update();
+
+
+            };
+
+            ws.onerror = function(error) {
+                console.error("WebSocket error: ", error);
+            };
+
+            ws.onclose = function(event) {
+                if (event.wasClean) {
+                    console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+                } else {
+                    console.log('[close] Connection died');
+                }
+            };
+            
+            
+        </script>
+    </body>
+
+</html>
