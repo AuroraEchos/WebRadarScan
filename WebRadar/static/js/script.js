@@ -1,4 +1,3 @@
-
 setInterval(function() {
     displayTime();
     displayScanRange();
@@ -137,7 +136,7 @@ function displayTarget(distance, angle) {
     var radarCenterX = (radarRect.left + radarRect.width / 2).toFixed(1);
     var radarCenterY = (radarRect.top + radarRect.height / 2).toFixed(1);
 
-    var radius = distance / 4000 * (radarRect.width / 2);
+    var radius = distance / 1000 * (radarRect.width / 2);
 
     var targetX = Number(radarCenterX) - Number(radius * Math.cos(angle * Math.PI / 180));
     var targetY = Number(radarCenterY) - Number(radius * Math.sin(angle * Math.PI / 180));
@@ -165,7 +164,8 @@ ws.onmessage = function (event) {
     const distance = data.distance;
     const angle = data.angle;
 
-    if (distance !== 0) {
+    /* if (distance !== 0) {
+
         drawScanLine(data.angle);
         if (angle > 0 && angle < 180) {
             pointsArray.push({ distance, angle });
@@ -175,9 +175,23 @@ ws.onmessage = function (event) {
             pointsArray = [];
             displayPoints();
         }
+    } */
+    drawScanLine(angle);
+
+
+    if (angle > 0 && angle < 180) {
+        pointsArray.push({ distance, angle });
+        if (distance !== 0) {
+            displayPoints();
+        }
+    }
+    else {
+        pointsArray = [];
+        console.log('清空');
+        displayPoints();
     }
 
-    const distance_forlineChart = data.distance / 4000 * 500;
+    const distance_forlineChart = data.distance / 2000 * 500;
     const angle_forlineChart = data.angle;
 
     lineChart.data.datasets[0].data.push(distance_forlineChart);

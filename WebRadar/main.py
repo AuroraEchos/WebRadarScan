@@ -8,30 +8,58 @@ from typing import List
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-from serial_module import SerialPort, DataHelper
+from utils.serial_module import SerialPort, DataHelper
+import serial.tools.list_ports
+from serial.serialutil import SerialException
+
+import os
+import webbrowser
+
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-serial_port = SerialPort('COM3', 115200)
+serial_port = None
+
+async def find_available_serial_port():
+    while True:
+        print("正在尝试寻找端口...")
+        com_ports = serial.tools.list_ports.comports()
+        if any("COM3" in port.device for port in com_ports):
+            print("发现可用端口，正在连接...")
+            webbrowser.open("http://127.0.0.1:8000")
+            return "COM3"
+        await asyncio.sleep(0.5)  # 每秒检查一次
 
 @app.on_event("startup")
 async def startup_event():
-    await serial_port.open()
-    asyncio.create_task(read_from_serial())
+    global serial_port
+    while True:
+        try:
+            com_port = await find_available_serial_port()
+            serial_port = SerialPort(com_port, 115200)
+            await serial_port.open()
+            asyncio.create_task(read_from_serial())
+            break  # 如果没有发生异常，则跳出循环
+        except SerialException as e:
+            print(f"发生异常: {e}")
+            print("重新寻找可用端口...")
+        except PermissionError as e:
+            print(f"权限错误: {e}")
+            print("尝试重新寻找可用端口...")
 
 @app.on_event("shutdown")
 async def shutdown_event():
     await serial_port.close()
 
-
 async def read_from_serial():
     while True:
         data = await serial_port.read()
+        print(data)
         result = DataHelper.process_data(data)
         if result is not None:
-            print(result)
+            #print(result)
             await manager.broadcast(result)
         await asyncio.sleep(0.01)
 
