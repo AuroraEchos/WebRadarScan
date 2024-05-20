@@ -94,7 +94,7 @@ class DataHelper:
             port_list.append(port_info)
         return port_list
     
-    """ @staticmethod
+    @staticmethod
     def process_data(data):
         global last_data
         
@@ -116,25 +116,7 @@ class DataHelper:
                             result = None
                     else:
                         result = None
-                return result """
-    
-    @staticmethod
-    def process_data(data):
-        global last_data
-        lines = data.split(b'\n')
-        for line in lines:
-            line = line.strip().decode('utf-8')
-            if line:
-                match = re.match(r'Angle:(\d+)Distance:(\d+)', line)
-                if match:
-                    angle = int(match.group(1))
-                    distance = int(match.group(2))
-                    if angle != last_data:
-                        result = {"angle": angle, "distance": distance}
-                        last_data = angle
-                    else:
-                        result = None
-            return result
+                return result
 
 #------------------- Serial -------------------
 
@@ -190,7 +172,7 @@ async def receive_data(serial_port):
                 print("Key error in JSON data:", e)
             
 async def main():
-    my_serial_port = SerialPort('COM3', 11200)
+    my_serial_port = SerialPort('COM3', 9600)
     await my_serial_port.open()
 
     receive_task = asyncio.create_task(receive_data(my_serial_port))
